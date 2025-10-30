@@ -5,86 +5,36 @@ import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
 import { useLanguage } from "../contexts/LanguageContext";
 import { translations } from "../utils/translations";
-
-interface Update {
-  id: string;
-  title: string;
-  description: string;
-  date: string;
-  image: string;
-  category: string;
-}
+import { allNews } from "../data/news";
 
 export function LatestUpdates() {
   const { language } = useLanguage();
   const t = translations[language];
 
-  const updates: Update[] = [
-    {
-      id: "1",
-      title: language === "en"
-        ? "New Public Library Opens in Biyagama"
-        : language === "si"
-        ? "බියගමේ නව මහජන පුස්තකාලය විවෘත වේ"
-        : "பியகமாவில் புதிய பொது நூலகம் திறக்கப்பட்டது",
-      description: language === "en"
-        ? "State-of-the-art library facility now available for residents with digital resources and study spaces."
-        : language === "si"
-        ? "ඩිජිටල් සම්පත් සහ අධ්‍යයන අවකාශයන් සහිත නවීන පුස්තකාල පහසුකම දැන් පදිංචිකරුවන්ට ලබා ගත හැක."
-        : "டிஜிட்டல் வளங்கள் மற்றும் படிப்பு இடங்களுடன் அதிநவீன நூலக வசதி இப்போது குடியிருப்பாளர்களுக்கு கிடைக்கிறது.",
-      date: language === "en" ? "Published on 28 October 2025" : language === "si" ? "2025 ඔක්තෝබර් 28 ප්‍රකාශයට පත් කරන ලදී" : "28 அக்டோபர் 2025 அன்று வெளியிடப்பட்டது",
-      image: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=800&q=80",
-      category: "community"
-    },
-    {
-      id: "2",
-      title: language === "en"
-        ? "Council Announces New Environmental Initiative"
-        : language === "si"
-        ? "සභාව නව පරිසර ව්‍යාපාරයක් ප්‍රකාශයට පත් කරයි"
-        : "சபை புதிய சுற்றுச்சூழல் முன்முயற்சியை அறிவிக்கிறது",
-      description: language === "en"
-        ? "Comprehensive plan to increase green spaces and promote sustainable practices across the region."
-        : language === "si"
-        ? "කලාපය පුරා හරිත අවකාශයන් වැඩි කිරීමට සහ තිරසාර භාවිතයන් ප්‍රවර්ධනය කිරීමට සවිස්තරාත්මක සැලැස්ම."
-        : "பகுதி முழுவதும் பசுமையான இடங்களை அதிகரிக்க மற்றும் நிலையான நடைமுறைகளை ஊக்குவிக்க விரிவான திட்டம்.",
-      date: language === "en" ? "Published on 27 October 2025" : language === "si" ? "2025 ඔක්තෝබර් 27 ප්‍රකාශයට පත් කරන ලදී" : "27 அக்டோபர் 2025 அன்று வெளியிடப்பட்டது",
-      image: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80",
-      category: "environment"
-    },
-    {
-      id: "3",
-      title: language === "en"
-        ? "Record Numbers Attend Community Festival"
-        : language === "si"
-        ? "වාර්තාගත සංඛ්‍යාවක් ප්‍රජා උත්සවයට සහභාගී වේ"
-        : "சமூக திருவிழாவில் சாதனை எண்ணிக்கையில் கலந்துகொண்டனர்",
-      description: language === "en"
-        ? "Annual cultural celebration brings together thousands of residents in a vibrant display of local traditions."
-        : language === "si"
-        ? "වාර්ෂික සංස්කෘතික සැමරුම දේශීය සම්ප්‍රදායන්ගේ විචිත්‍රවත් ප්‍රදර්ශනයක දහස් ගණන් පදිංචිකරුවන් එක්රැස් කරයි."
-        : "வருடாந்திர கலாச்சார கொண்டாட்டம் உள்ளூர் பாரம்பரியங்களின் துடிப்பான காட்சியில் ஆயிரக்கணக்கான குடியிருப்பாளர்களை ஒன்றிணைக்கிறது.",
-      date: language === "en" ? "Published on 27 October 2025" : language === "si" ? "2025 ඔක්තෝබර් 27 ප්‍රකාශයට පත් කරන ලදී" : "27 அக்டோபர் 2025 அன்று வெளியிடப்பட்டது",
-      image: "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80",
-      category: "community"
-    },
-    {
-      id: "4",
-      title: language === "en"
-        ? "Digital Services Portal Now Available"
-        : language === "si"
-        ? "ඩිජිටල් සේවා ද්වාරය දැන් ලබා ගත හැකිය"
-        : "டிஜிட்டல் சேவைகள் போர்ட்டல் இப்போது கிடைக்கிறது",
-      description: language === "en"
-        ? "Apply for permits, pay taxes, and access services online through our new digital platform."
-        : language === "si"
-        ? "අපගේ නව ඩිජිටල් වේදිකාව හරහා අවසර සඳහා අයදුම් කරන්න, බදු ගෙවන්න සහ සේවා සඳහා ප්‍රවේශ වන්න."
-        : "எங்கள் புதிய டிஜிட்டல் தளத்தின் மூலம் அனுமதிகளுக்கு விண்ணப்பிக்கவும், வரிகளை செலுத்தவும் மற்றும் சேவைகளை அணுகவும்.",
-      date: language === "en" ? "Published on 26 October 2025" : language === "si" ? "2025 ඔක්තෝබර් 26 ප්‍රකාශයට පත් කරන ලදී" : "26 அக்டோபர் 2025 அன்று வெளியிடப்பட்டது",
-      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
-      category: "infrastructure"
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const formatted = date.toLocaleDateString(language === "en" ? "en-US" : "si-LK", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+    
+    if (language === "en") {
+      return `Published on ${formatted}`;
+    } else if (language === "si") {
+      return `${formatted} ප්‍රකාශයට පත් කරන ලදී`;
+    } else {
+      return `${formatted} அன்று வெளியிடப்பட்டது`;
     }
-  ];
+  };
+
+  const getHeading = (news: typeof allNews[0]) => {
+    return language === "en" ? news.heading.en : language === "si" ? news.heading.si : news.heading.tm;
+  };
+
+  const getSummary = (news: typeof allNews[0]) => {
+    return language === "en" ? news.summary.en : language === "si" ? news.summary.si : news.summary.tm;
+  };
 
   return (
     <section className="py-16 bg-muted/30">
@@ -112,26 +62,26 @@ export function LatestUpdates() {
           className="w-full"
         >
           <CarouselContent className="-ml-2 md:-ml-4">
-            {updates.map((update) => (
-              <CarouselItem key={update.id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
+            {allNews.map((news, index) => (
+              <CarouselItem key={index} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
                 <Card className="overflow-hidden h-full hover:shadow-lg transition-shadow">
                   <div className="relative h-48">
                     <img
-                      src={update.image}
-                      alt={update.title}
+                      src={news.image}
+                      alt={getHeading(news)}
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <CardHeader>
-                    <CardTitle className="line-clamp-2">{update.title}</CardTitle>
+                    <CardTitle className="line-clamp-2">{getHeading(news)}</CardTitle>
                     <CardDescription className="text-xs flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      {update.date}
+                      {formatDate(news.date)}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground line-clamp-3">
-                      {update.description}
+                      {getSummary(news)}
                     </p>
                   </CardContent>
                 </Card>

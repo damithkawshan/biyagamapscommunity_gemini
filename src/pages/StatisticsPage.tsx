@@ -1,48 +1,49 @@
-import { Users, Briefcase, Home, Building2, MapPin, Shield, Flame } from "lucide-react";
+import { Users, Briefcase, Home, Building2, MapPin, Shield, CircleDot, Trophy, School, Recycle, BookOpen, Flame } from "lucide-react";
 import statsImage from "figma:asset/396ca1a2e22b1a27ac94973f1f32fa86773a7ac2.png";
 import { Card, CardContent } from "../components/ui/card";
+import { CounterAnimation } from "../components/CounterAnimation";
 
 export function StatisticsPage() {
   const statistics = [
     {
       icon: MapPin,
-      value: "61.6",
+      value: 61.6,
       label: "වර්ග කිලෝමීටර",
       labelEn: "Sq. Km"
     },
     {
       icon: Users,
-      value: "207,714",
+      value: 207714,
       label: "ජනගහනය",
       labelEn: "Population (2021)"
     },
     {
       icon: Briefcase,
-      value: "126,238",
+      value: 126238,
       label: "ලියාපදිංචි ඡන්දදායකයින්",
       labelEn: "Registered Voters"
     },
     {
       icon: Home,
-      value: "49",
+      value: 49,
       label: "ලාභාන්විත වාසී",
       labelEn: "Beneficiaries"
     },
     {
       icon: Building2,
-      value: "55",
+      value: 55,
       label: "ගම්මාන සංඛ්‍යාව",
       labelEn: "Villages"
     },
     {
       icon: Shield,
-      value: "211",
+      value: 211,
       label: "අසුරක්ෂිත ස්ථාන",
       labelEn: "Vulnerable Places"
     },
     {
-      icon: MapPin,
-      value: "3",
+      icon: CircleDot,
+      value: 3,
       label: "දිව කොට්ඨාස",
       labelEn: "Divisions"
     }
@@ -50,32 +51,32 @@ export function StatisticsPage() {
 
   const facilities = [
     {
-      icon: "⚽",
-      value: "16",
+      icon: Trophy,
+      value: 16,
       label: "ක්‍රීඩා පිටිය",
       labelEn: "Sports Grounds"
     },
     {
-      icon: "🏛️",
-      value: "22",
+      icon: School,
+      value: 22,
       label: "ප්‍රජා ශාලා",
       labelEn: "Community Halls"
     },
     {
-      icon: "🚀",
-      value: "11",
+      icon: Recycle,
+      value: 11,
       label: "අපද්‍රව්‍ය කොම්පෝස්ට්",
       labelEn: "Waste Compost"
     },
     {
-      icon: "📚",
-      value: "32",
+      icon: BookOpen,
+      value: 32,
       label: "පුස්තකාල ශාලා",
       labelEn: "Libraries"
     },
     {
-      icon: "🔥",
-      value: "3",
+      icon: Flame,
+      value: 3,
       label: "ගිනි නිවාපාලන",
       labelEn: "Fire Stations"
     }
@@ -127,7 +128,10 @@ export function StatisticsPage() {
             <Card key={index} className="hover:shadow-lg transition-shadow">
               <CardContent className="p-6 text-center">
                 <stat.icon className="w-12 h-12 mx-auto mb-4 text-blue-600" />
-                <div className="text-3xl mb-2">{stat.value}</div>
+                <CounterAnimation 
+                  end={stat.value} 
+                  className="text-3xl mb-2"
+                />
                 <div className="text-sm text-gray-600">{stat.label}</div>
                 <div className="text-xs text-gray-500">{stat.labelEn}</div>
               </CardContent>
@@ -144,8 +148,11 @@ export function StatisticsPage() {
           {facilities.map((facility, index) => (
             <Card key={index} className="hover:shadow-lg transition-shadow">
               <CardContent className="p-6 text-center">
-                <div className="text-4xl mb-4">{facility.icon}</div>
-                <div className="text-3xl mb-2">{facility.value}</div>
+                <facility.icon className="w-12 h-12 mx-auto mb-4 text-blue-600" />
+                <CounterAnimation 
+                  end={facility.value} 
+                  className="text-3xl mb-2"
+                />
                 <div className="text-sm text-gray-600">{facility.label}</div>
                 <div className="text-xs text-gray-500">{facility.labelEn}</div>
               </CardContent>
