@@ -16,6 +16,8 @@ import { GalleryPage } from "./pages/GalleryPage";
 import { CouncilStructurePage } from "./pages/CouncilStructurePage";
 import { ContactPage } from "./pages/ContactPage";
 import { Newsletter } from "./pages/Newsletter";
+import { IssueReportingPage } from "./pages/IssueReportingPage";
+import { IssueDashboardPage } from "./pages/IssueDashboardPage";
 
 export default function App() {
   return (
@@ -29,6 +31,8 @@ export default function App() {
               <Route path="/services" element={<ServicesPage />} />
               <Route path="/services/:serviceId" element={<ServicesPage />} />
               <Route path="/services/department/:departmentId" element={<ServicesPage />} />
+              <Route path="/report-issue" element={<IssueReportingPage />} />
+              <Route path="/issue-dashboard" element={<IssueDashboardPage />} />
               <Route path="/statistics" element={<StatisticsPage />} />
               <Route path="/gallery" element={<GalleryPage />} />
               <Route path="/council" element={<CouncilStructurePage />} />

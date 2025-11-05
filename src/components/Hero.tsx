@@ -99,6 +99,15 @@ export function Hero() {
               {t.hero.cta}
             </Button>
           </Link>
+          <Link to="/report-issue">
+            <Button
+              size="lg"
+              variant="destructive"
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {language === "en" ? "Report Issue" : language === "si" ? "ගැටළුව වාර්තා කරන්න" : "பிரச்சினை புகார்"}
+            </Button>
+          </Link>
           <Link to="/contact">
             <Button
               size="lg"

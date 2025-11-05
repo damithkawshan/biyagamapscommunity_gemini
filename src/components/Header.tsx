@@ -81,6 +81,18 @@ export function Header() {
               {t.nav.services}
             </Link>
             <Link
+              to="/report-issue"
+              className={navLinkClass("/report-issue")}
+            >
+              {language === "en" ? "Report Issue" : language === "si" ? "ගැටළුව වාර්තා කරන්න" : "பிரச்சினை புகார்"}
+            </Link>
+            <Link
+              to="/issue-dashboard"
+              className={navLinkClass("/issue-dashboard")}
+            >
+              {language === "en" ? "Issue Dashboard" : language === "si" ? "ගැටළු උපකරණ පුවරුව" : "பிரச்சினை கட்டுப்பாடு"}
+            </Link>
+            <Link
               to="/newsletter"
               className={navLinkClass("/newsletter")}
             >
@@ -170,6 +182,20 @@ export function Header() {
               className={`text-left py-2 ${navLinkClass("/services")}`}
             >
               {t.nav.services}
+            </Link>
+            <Link
+              to="/report-issue"
+              onClick={() => setIsMenuOpen(false)}
+              className={`text-left py-2 ${navLinkClass("/report-issue")}`}
+            >
+              {language === "en" ? "Report Issue" : language === "si" ? "ගැටළුව වාර්තා කරන්න" : "பிரச்சினை புகார்"}
+            </Link>
+            <Link
+              to="/issue-dashboard"
+              onClick={() => setIsMenuOpen(false)}
+              className={`text-left py-2 ${navLinkClass("/issue-dashboard")}`}
+            >
+              {language === "en" ? "Issue Dashboard" : language === "si" ? "ගැටළු උපකරණ පුවරුව" : "பிரச்சினை கட்டுப்பாடு"}
             </Link>
             <Link
               to="/newsletter"
