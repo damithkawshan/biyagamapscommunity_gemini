@@ -89,6 +89,29 @@ app.post('/issues', async (req, res) => {
   }
 });
 
+app.get('/issues/:id/history', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      `SELECT 
+        ish.id, 
+        ish.status, 
+        ish.notes, 
+        ish.created_at, 
+        u.name as updated_by_user
+      FROM issue_status_history ish
+      LEFT JOIN users u ON ish.updated_by_user_id = u.id
+      WHERE ish.issue_id = $1
+      ORDER BY ish.created_at DESC`,
+      [id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });

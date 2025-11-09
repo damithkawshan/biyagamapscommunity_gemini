@@ -13,6 +13,7 @@ export interface IssueCategory {
   icon: string;
   color: string;
   departmentId: string;
+  types: string[];
 }
 
 export interface IssueType {

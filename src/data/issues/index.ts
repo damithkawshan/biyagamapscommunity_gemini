@@ -1,3 +1,4 @@
 export * from './types';
 export * from './categories';
-export * from './mockIssues';
+export * from './issue-types';
+
