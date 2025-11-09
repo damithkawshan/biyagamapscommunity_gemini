@@ -112,6 +112,16 @@ app.get('/issues/:id/history', async (req, res) => {
   }
 });
 
+app.get('/wards', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM wards');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });

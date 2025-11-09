@@ -1,8 +1,17 @@
-import { MapPin, BarChart3, History as HistoryIcon, Users, Building2, Leaf, TrendingUp } from 'lucide-react';
+import { MapPin, BarChart3, History as HistoryIcon, Users, Building2, Leaf } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { useLanguage } from '../contexts/LanguageContext';
-import { StatisticsPage } from './StatisticsPage';
+import { useEffect, useState } from 'react';
+
+type Ward = {
+  id: number;
+  name: string;
+  description: string;
+  created_at: string;
+  latitude: number;
+  longitude: number;
+};
 
 export function AboutAreaPage() {
   const { language } = useLanguage();
@@ -353,22 +362,26 @@ function HistoryContent() {
 
 function MapContent() {
   const { language } = useLanguage();
+  const [wards, setWards] = useState<Ward[]>([]);
+
+  useEffect(() => {
+    const fetchWards = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/wards');
+        const data = await response.json();
+        setWards(data);
+      } catch (error) {
+        console.error('Error fetching wards:', error);
+      }
+    };
+
+    fetchWards();
+  }, []);
 
   const getText = (obj: any) => {
     if (!obj) return '';
     return language === 'en' ? obj.en : language === 'si' ? obj.si : obj.tm;
   };
-
-  const wards = [
-    { id: 1, name: { en: 'Ward 01 - Biyagama Central', si: 'වාට්ටුව 01 - බියගම මධ්‍යම', tm: 'வார்டு 01 - பியகம மத்திய' }, area: '5.2 km²' },
-    { id: 2, name: { en: 'Ward 02 - Kochchikade', si: 'වාට්ටුව 02 - කොච්චිකඩේ', tm: 'வார்டு 02 - கொச்சிகடே' }, area: '5.5 km²' },
-    { id: 3, name: { en: 'Ward 03 - Walgama', si: 'වාට්ටුව 03 - වල්ගම', tm: 'வார்டு 03 - வல்கம' }, area: '4.8 km²' },
-    { id: 4, name: { en: 'Ward 04 - Hunupitiya', si: 'වාට්ටුව 04 - හුණුපිටිය', tm: 'வார்டு 04 - ஹுனுபிட்டிய' }, area: '5.1 km²' },
-    { id: 5, name: { en: 'Ward 05 - Udugampola', si: 'වාට්ටුව 05 - උඩුගම්පොල', tm: 'வார்டு 05 - உடுகம்போல' }, area: '5.4 km²' },
-    { id: 6, name: { en: 'Ward 06 - Malwana', si: 'වාට්ටුව 06 - මල්වාන', tm: 'வார்டு 06 - மல்வான' }, area: '5.3 km²' },
-    { id: 7, name: { en: 'Ward 07 - Kirindiwela', si: 'වාට්ටුව 07 - කිරිඳිවෙල', tm: 'வார்டு 07 - கிரிந்திவெல' }, area: '5.6 km²' },
-    { id: 8, name: { en: 'Ward 08 - Gonawala', si: 'වාට්ටුව 08 - ගෝනාවල', tm: 'வார்டு 08 - கோனாவல' }, area: '5.4 km²' }
-  ];
 
   const boundaries = [
     { direction: { en: 'North', si: 'උතුර', tm: 'வடக்கு' }, border: { en: 'Gampaha', si: 'ගම්පහ', tm: 'கம்பஹா' } },
@@ -394,20 +407,17 @@ function MapContent() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="bg-gray-200 rounded-lg h-96 flex items-center justify-center">
-            <div className="text-center">
-              <MapPin className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground">
-                {language === 'en' 
-                  ? 'Interactive map would be displayed here' 
-                  : language === 'si' 
-                  ? 'අන්තර්ක්‍රියාකාරී සිතියම මෙහි පෙන්වනු ඇත' 
-                  : 'ஊடாடும் வரைபடம் இங்கே காட்டப்படும்'}
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Coordinates: 6.9497° N, 79.9779° E
-              </p>
-            </div>
+          <div className="rounded-lg h-96 overflow-hidden">
+            <iframe
+              title="Biyagama Location"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31684.11282333524!2d79.96001885136718!3d6.949702800000008!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ae2566915581ab9%3A0x49949f6b43543330!2sBiyagama!5e0!3m2!1sen!2slk!4v1678886400000!5m2!1sen!2slk"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen={true}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            ></iframe>
           </div>
         </CardContent>
       </Card>
@@ -442,8 +452,8 @@ function MapContent() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium">{getText(ward.name)}</p>
-                    <p className="text-sm text-muted-foreground">{ward.area}</p>
+                    <p className="font-medium">{ward.name}</p>
+                    <p className="text-sm text-muted-foreground">{ward.description}</p>
                   </div>
                   <MapPin className="h-5 w-5 text-blue-600" />
                 </div>
