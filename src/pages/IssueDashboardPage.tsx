@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Search, Filter, MapPin, Calendar, TrendingUp, CheckCircle2, Clock, AlertCircle, Eye } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
@@ -9,17 +9,59 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 import { useLanguage } from '../contexts/LanguageContext';
 import { issueCategories } from '../data/issues';
-import { mockIssues } from '../data/issues/mockIssues';
 import { wards } from '../data/wards';
-import { Issue } from '../data/issues/types';
+
+interface Issue {
+  id: number;
+  title: string;
+  issue_type_id: number | null;
+  description: string;
+  location_latitude: number | null;
+  location_longitude: number | null;
+  ward_id: number | null;
+  manual_location: string;
+  photo_url: string;
+  reporter_name: string;
+  reporter_email: string;
+  reporter_phone: string;
+  is_anonymous: boolean;
+  status: string;
+  priority: string;
+  admin_notes: string;
+  created_at: string;
+  updated_at: string;
+  resolved_at: string | null;
+}
 
 export function IssueDashboardPage() {
   const { language } = useLanguage();
+  const [issues, setIssues] = useState<Issue[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedWard, setSelectedWard] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
+
+  useEffect(() => {
+    const fetchIssues = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/issues');
+        if (!response.ok) {
+          throw new Error('Failed to fetch issues');
+        }
+        const data = await response.json();
+        setIssues(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchIssues();
+  }, []);
 
   const getText = (obj: any) => {
     if (!obj) return '';
@@ -40,33 +82,35 @@ export function IssueDashboardPage() {
 
   // Filter issues
   const filteredIssues = useMemo(() => {
-    return mockIssues.filter(issue => {
+    return issues.filter(issue => {
       const matchesSearch = 
         issue.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        issue.referenceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        issue.description.toLowerCase().includes(searchQuery.toLowerCase());
+        (issue.description && issue.description.toLowerCase().includes(searchQuery.toLowerCase()));
       
-      const matchesCategory = selectedCategory === 'all' || issue.categoryId === selectedCategory;
-      const matchesWard = selectedWard === 'all' || issue.location.wardId === selectedWard;
+      const issueCategory = issue.issue_type_id !== null 
+        ? issueCategories.find(c => c.types.includes(issue.issue_type_id!.toString()))
+        : undefined;
+      const matchesCategory = selectedCategory === 'all' || (issueCategory && issueCategory.id === selectedCategory);
+      const matchesWard = selectedWard === 'all' || (issue.ward_id && issue.ward_id.toString() === selectedWard);
       const matchesStatus = selectedStatus === 'all' || issue.status === selectedStatus;
 
-      return matchesSearch && matchesCategory && matchesWard && matchesStatus && issue.isPublic;
+      return matchesSearch && matchesCategory && matchesWard && matchesStatus;
     });
-  }, [searchQuery, selectedCategory, selectedWard, selectedStatus]);
+  }, [searchQuery, selectedCategory, selectedWard, selectedStatus, issues]);
 
   // Calculate statistics
   const stats = useMemo(() => {
-    const total = mockIssues.filter(i => i.isPublic).length;
-    const resolved = mockIssues.filter(i => i.isPublic && i.status === 'resolved').length;
-    const inProgress = mockIssues.filter(i => i.isPublic && i.status === 'in-progress').length;
-    const pending = mockIssues.filter(i => i.isPublic && (i.status === 'submitted' || i.status === 'acknowledged')).length;
+    const total = issues.length;
+    const resolved = issues.filter(i => i.status === 'resolved').length;
+    const inProgress = issues.filter(i => i.status === 'in-progress').length;
+    const pending = issues.filter(i => i.status === 'new').length;
     
     return { total, resolved, inProgress, pending };
-  }, []);
+  }, [issues]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'submitted': return 'bg-gray-500';
+      case 'new': return 'bg-gray-500';
       case 'acknowledged': return 'bg-blue-500';
       case 'in-progress': return 'bg-yellow-500';
       case 'resolved': return 'bg-green-500';
@@ -77,13 +121,13 @@ export function IssueDashboardPage() {
 
   const getStatusText = (status: string) => {
     const statusMap = {
-      submitted: { en: 'Submitted', si: 'ඉදිරිපත් කළා', tm: 'சமர்ப்பிக்கப்பட்டது' },
+      new: { en: 'New', si: 'අලුත්', tm: 'புதிய' },
       acknowledged: { en: 'Acknowledged', si: 'පිළිගත්තා', tm: 'ஒப்புக்கொள்ளப்பட்டது' },
       'in-progress': { en: 'In Progress', si: 'ක්‍රියාත්මක වෙමින්', tm: 'செயல்பாட்டில்' },
       resolved: { en: 'Resolved', si: 'විසඳා ඇත', tm: 'தீர்க்கப்பட்டது' },
       closed: { en: 'Closed', si: 'වසා දමා ඇත', tm: 'மூடப்பட்டது' }
     };
-    return getText(statusMap[status as keyof typeof statusMap] || statusMap.submitted);
+    return getText(statusMap[status as keyof typeof statusMap] || statusMap.new);
   };
 
   const getPriorityBadge = (priority: string) => {
@@ -96,6 +140,14 @@ export function IssueDashboardPage() {
     const p = priorityMap[priority as keyof typeof priorityMap] || priorityMap.medium;
     return <Badge variant={p.variant}>{getText(p)}</Badge>;
   };
+
+  if (loading) {
+    return <div className="container mx-auto p-8 text-center">Loading issues...</div>;
+  }
+
+  if (error) {
+    return <div className="container mx-auto p-8 text-center text-red-600">Error: {error}</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -235,7 +287,7 @@ export function IssueDashboardPage() {
                   <SelectItem value="all">
                     {language === 'en' ? 'All Statuses' : language === 'si' ? 'සියලුම තත්ත්වයන්' : 'அனைத்து நிலைகள்'}
                   </SelectItem>
-                  <SelectItem value="submitted">{getStatusText('submitted')}</SelectItem>
+                  <SelectItem value="new">{getStatusText('new')}</SelectItem>
                   <SelectItem value="acknowledged">{getStatusText('acknowledged')}</SelectItem>
                   <SelectItem value="in-progress">{getStatusText('in-progress')}</SelectItem>
                   <SelectItem value="resolved">{getStatusText('resolved')}</SelectItem>
@@ -307,8 +359,10 @@ export function IssueDashboardPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredIssues.map(issue => {
-              const category = issueCategories.find(c => c.id === issue.categoryId);
-              const ward = wards.find(w => w.id === issue.location.wardId);
+              const issueCategory = issue.issue_type_id !== null
+                ? issueCategories.find(c => c.types.includes(issue.issue_type_id!.toString()))
+                : undefined;
+              const ward = wards.find(w => issue.ward_id && w.id === issue.ward_id.toString());
               
               return (
                 <Dialog key={issue.id}>
@@ -328,16 +382,16 @@ export function IssueDashboardPage() {
                         <div className="space-y-2 text-sm">
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <MapPin className="h-4 w-4" />
-                            <span className="truncate">{getText(ward?.name)}</span>
+                            <span className="truncate">{ward ? getText(ward.name) : issue.manual_location}</span>
                           </div>
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <Calendar className="h-4 w-4" />
-                            <span>{issue.submittedDate.toLocaleDateString()}</span>
+                            <span>{new Date(issue.created_at).toLocaleDateString()}</span>
                           </div>
-                          {category && (
+                          {issueCategory && (
                             <div>
-                              <Badge variant="outline" style={{ borderColor: category.color, color: category.color }}>
-                                {getText(category.name)}
+                              <Badge variant="outline" style={{ borderColor: issueCategory.color, color: issueCategory.color }}>
+                                {getText(issueCategory.name)}
                               </Badge>
                             </div>
                           )}
@@ -350,7 +404,11 @@ export function IssueDashboardPage() {
                     </Card>
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                    <IssueDetailsDialog issue={issue} />
+                    <IssueDetailsDialog 
+                      issue={issue} 
+                      getStatusColor={getStatusColor} 
+                      getStatusText={getStatusText} 
+                    />
                   </DialogContent>
                 </Dialog>
               );
@@ -363,37 +421,29 @@ export function IssueDashboardPage() {
 }
 
 // Issue Details Dialog Component
-function IssueDetailsDialog({ issue }: { issue: Issue }) {
+function IssueDetailsDialog({ 
+  issue, 
+  getStatusColor, 
+  getStatusText 
+}: { 
+  issue: Issue | null,
+  getStatusColor: (status: string) => string,
+  getStatusText: (status: string) => string
+}) {
   const { language } = useLanguage();
-  const category = issueCategories.find(c => c.id === issue.categoryId);
-  const ward = wards.find(w => w.id === issue.location.wardId);
-  const gnDivision = ward?.gnDivisions.find(gn => gn.id === issue.location.gnDivisionId);
+  
+  if (!issue) {
+    return null;
+  }
+
+  const issueCategory = issue.issue_type_id !== null
+    ? issueCategories.find(c => c.types.includes(issue.issue_type_id!.toString()))
+    : undefined;
+  const ward = wards.find(w => issue.ward_id && w.id === issue.ward_id.toString());
 
   const getText = (obj: any) => {
     if (!obj) return '';
     return language === 'en' ? obj.en : language === 'si' ? obj.si : obj.tm;
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'submitted': return 'bg-gray-500';
-      case 'acknowledged': return 'bg-blue-500';
-      case 'in-progress': return 'bg-yellow-500';
-      case 'resolved': return 'bg-green-500';
-      case 'closed': return 'bg-gray-400';
-      default: return 'bg-gray-500';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    const statusMap = {
-      submitted: { en: 'Submitted', si: 'ඉදිරිපත් කළා', tm: 'சமர்ப்பிக்கப்பட்டது' },
-      acknowledged: { en: 'Acknowledged', si: 'පිළිගත්තා', tm: 'ஒப்புக்கொள்ளப்பட்டது' },
-      'in-progress': { en: 'In Progress', si: 'ක්‍රියාත්මක වෙමින්', tm: 'செயல்பாட்டில்' },
-      resolved: { en: 'Resolved', si: 'විසඳා ඇත', tm: 'தீர்க்கப்பட்டது' },
-      closed: { en: 'Closed', si: 'වසා දමා ඇත', tm: 'மூடப்பட்டது' }
-    };
-    return getText(statusMap[status as keyof typeof statusMap] || statusMap.submitted);
   };
 
   return (
@@ -401,7 +451,7 @@ function IssueDetailsDialog({ issue }: { issue: Issue }) {
       <DialogHeader>
         <DialogTitle className="text-2xl pr-8">{issue.title}</DialogTitle>
         <DialogDescription className="font-mono text-blue-600">
-          {issue.referenceNumber}
+          ID: {issue.id}
         </DialogDescription>
       </DialogHeader>
       
@@ -426,7 +476,7 @@ function IssueDetailsDialog({ issue }: { issue: Issue }) {
             <h4 className="font-medium mb-1">
               {language === 'en' ? 'Category' : language === 'si' ? 'කාණ්ඩය' : 'வகை'}
             </h4>
-            <p className="text-muted-foreground">{category && getText(category.name)}</p>
+            <p className="text-muted-foreground">{issueCategory && getText(issueCategory.name)}</p>
           </div>
         </div>
 
@@ -437,112 +487,43 @@ function IssueDetailsDialog({ issue }: { issue: Issue }) {
           <div className="space-y-1 text-sm">
             <p className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-muted-foreground" />
-              {issue.location.address}
+              {issue.manual_location}
             </p>
-            {issue.location.landmark && (
-              <p className="text-muted-foreground ml-6">{issue.location.landmark}</p>
+            {ward && (
+              <p className="text-muted-foreground ml-6">
+                {getText(ward.name)}
+              </p>
             )}
-            <p className="text-muted-foreground ml-6">
-              {getText(ward?.name)}{gnDivision && ` - ${getText(gnDivision.name)}`}
-            </p>
-            {issue.location.coordinates && (
+            {(issue.location_latitude && issue.location_longitude) && (
               <p className="text-xs text-muted-foreground ml-6">
-                {language === 'en' ? 'GPS' : language === 'si' ? 'GPS' : 'GPS'}: {issue.location.coordinates.lat.toFixed(6)}, {issue.location.coordinates.lng.toFixed(6)}
-                {issue.location.coordinates.accuracy && ` (±${issue.location.coordinates.accuracy}m)`}
+                GPS: {issue.location_latitude.toFixed(6)}, {issue.location_longitude.toFixed(6)}
               </p>
             )}
           </div>
         </div>
-
-        {issue.location.identifiers && (
-          <div>
-            <h4 className="font-medium mb-2">
-              {language === 'en' ? 'Identifiers' : language === 'si' ? 'හඳුනාගැනීම්' : 'அடையாளங்காட்டிகள்'}
-            </h4>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              {issue.location.identifiers.poleBNumber && (
-                <div>
-                  <span className="text-muted-foreground">
-                    {language === 'en' ? 'Pole #:' : language === 'si' ? 'කණු #:' : 'கம்பம் #:'}
-                  </span>{' '}
-                  <span className="font-mono">{issue.location.identifiers.poleBNumber}</span>
-                </div>
-              )}
-              {issue.location.identifiers.binNumber && (
-                <div>
-                  <span className="text-muted-foreground">
-                    {language === 'en' ? 'Bin #:' : language === 'si' ? 'බඳුන #:' : 'தொட்டி #:'}
-                  </span>{' '}
-                  <span className="font-mono">{issue.location.identifiers.binNumber}</span>
-                </div>
-              )}
-              {issue.location.identifiers.buildingNumber && (
-                <div>
-                  <span className="text-muted-foreground">
-                    {language === 'en' ? 'Building #:' : language === 'si' ? 'ගොඩනැගිල්ල #:' : 'கட்டிடம் #:'}
-                  </span>{' '}
-                  <span className="font-mono">{issue.location.identifiers.buildingNumber}</span>
-                </div>
-              )}
-              {issue.location.identifiers.plotNumber && (
-                <div>
-                  <span className="text-muted-foreground">
-                    {language === 'en' ? 'Plot #:' : language === 'si' ? 'ඉඩම #:' : 'நிலம் #:'}
-                  </span>{' '}
-                  <span className="font-mono">{issue.location.identifiers.plotNumber}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
 
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <h4 className="font-medium mb-1">
               {language === 'en' ? 'Submitted' : language === 'si' ? 'ඉදිරිපත් කළ' : 'சமர்ப்பிக்கப்பட்டது'}
             </h4>
-            <p className="text-muted-foreground">{issue.submittedDate.toLocaleDateString()}</p>
+            <p className="text-muted-foreground">{new Date(issue.created_at).toLocaleString()}</p>
           </div>
           <div>
             <h4 className="font-medium mb-1">
               {language === 'en' ? 'Last Updated' : language === 'si' ? 'අවසන් යාවත්කාලීනය' : 'கடைசியாக புதுப்பிக்கப்பட்டது'}
             </h4>
-            <p className="text-muted-foreground">{issue.updatedDate.toLocaleDateString()}</p>
+            <p className="text-muted-foreground">{new Date(issue.updated_at).toLocaleString()}</p>
           </div>
         </div>
 
-        {issue.updates && issue.updates.length > 0 && (
+        {issue.admin_notes && (
           <div>
-            <h4 className="font-medium mb-3">
-              {language === 'en' ? 'Status Timeline' : language === 'si' ? 'තත්ත්ව කාලරේඛාව' : 'நிலை காலவரிசை'}
+            <h4 className="font-medium mb-2">
+              {language === 'en' ? 'Administrator Notes' : language === 'si' ? 'පරිපාලක සටහන්' : 'நிர்வாகி குறிப்புகள்'}
             </h4>
-            <div className="space-y-3">
-              {issue.updates.map((update, index) => (
-                <div key={update.id} className="flex gap-3">
-                  <div className="relative flex flex-col items-center">
-                    <div className={`w-8 h-8 rounded-full ${getStatusColor(update.status)} flex items-center justify-center text-white text-xs`}>
-                      <CheckCircle2 className="h-4 w-4" />
-                    </div>
-                    {index < issue.updates!.length - 1 && (
-                      <div className="w-0.5 h-full bg-gray-200 absolute top-8" />
-                    )}
-                  </div>
-                  <div className="flex-1 pb-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge className={`${getStatusColor(update.status)} text-xs`}>
-                        {getStatusText(update.status)}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {update.date.toLocaleDateString()} {update.date.toLocaleTimeString()}
-                      </span>
-                    </div>
-                    <p className="text-sm">{update.comment}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {language === 'en' ? 'by' : language === 'si' ? 'විසින්' : 'மூலம்'} {update.updatedBy}
-                    </p>
-                  </div>
-                </div>
-              ))}
+            <div className="p-3 bg-gray-100 rounded-md text-sm text-muted-foreground">
+              <p>{issue.admin_notes}</p>
             </div>
           </div>
         )}
