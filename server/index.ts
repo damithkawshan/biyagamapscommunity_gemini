@@ -48,15 +48,44 @@ app.get('/issues/:id', async (req, res) => {
 
 app.post('/issues', async (req, res) => {
   try {
-    const { category, description, location, image_url } = req.body;
+    const {
+      title,
+      issue_type_id,
+      description,
+      location_latitude,
+      location_longitude,
+      manual_location,
+      photo_url,
+      reporter_name,
+      reporter_email,
+      reporter_phone,
+      is_anonymous
+    } = req.body;
+
     const newIssue = await pool.query(
-      'INSERT INTO issues (category, description, location, image_url, status) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [category, description, location, image_url, 'new']
+      `INSERT INTO issues (
+        title, issue_type_id, description, location_latitude, location_longitude, 
+        manual_location, photo_url, reporter_name, reporter_email, reporter_phone, 
+        is_anonymous, status, priority
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'new', 'medium') RETURNING *`,
+      [
+        title,
+        issue_type_id,
+        description,
+        location_latitude,
+        location_longitude,
+        manual_location,
+        photo_url,
+        reporter_name,
+        reporter_email,
+        reporter_phone,
+        is_anonymous
+      ]
     );
-    res.json(newIssue.rows[0]);
+    res.status(201).json(newIssue.rows[0]);
   } catch (err) {
     console.error(err);
-    res.status(500).send('Server error');
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

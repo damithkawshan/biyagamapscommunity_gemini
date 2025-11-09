@@ -13,7 +13,7 @@ import { Progress } from '../components/ui/progress';
 import { Separator } from '../components/ui/separator';
 import { useLanguage } from '../contexts/LanguageContext';
 import { issueCategories, issueTypes } from '../data/issues';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export function IssueReportingPage() {
   const { language } = useLanguage();
@@ -95,6 +95,9 @@ function ReportIssueForm() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [files, setFiles] = useState<File[]>([]);
+  const [latitude, setLatitude] = useState<number | ''>('');
+  const [longitude, setLongitude] = useState<number | ''>('');
+  const [isAnonymous, setIsAnonymous] = useState(false);
 
   const getText = (obj: any) => {
     if (!obj) return '';
@@ -115,25 +118,74 @@ function ReportIssueForm() {
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  const handleGps = () => {
+    navigator.geolocation.getCurrentPosition((position) => {
+      setLatitude(position.coords.latitude);
+      setLongitude(position.coords.longitude);
+      toast.success(language === 'en' ? 'Location captured!' : language === 'si' ? 'ස්ථානය ලබා ගත්තා!' : 'இடம் படம்பிடிக்கப்பட்டது!');
+    }, (error) => {
+      console.error("Error Code = " + error.code + " - " + error.message);
+      toast.error(language === 'en' ? 'Could not get location.' : language === 'si' ? 'ස්ථානය ලබා ගත නොහැකි විය.' : 'இருப்பிடத்தைப் பெற முடியவில்லை.');
+    });
+  };
+
   const handleSubmit = async () => {
     setLoading(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Generate reference number
-    const ref = `BPS${Date.now().toString().slice(-8)}`;
-    setReferenceNumber(ref);
-    setSubmitted(true);
-    setLoading(false);
-    
-    toast.success(
-      language === 'en' 
-        ? 'Issue reported successfully!' 
-        : language === 'si' 
-        ? 'ගැටළුව සාර්ථකව වාර්තා කරන ලදී!' 
-        : 'பிரச்சினை வெற்றிகரமாக புகாரளிக்கப்பட்டது!'
-    );
+
+    // TODO: Implement actual file upload and get URLs
+    const photoUrl = '';
+
+    const issueData = {
+      title,
+      issue_type_id: parseInt(selectedType, 10),
+      description,
+      location_latitude: latitude || null,
+      location_longitude: longitude || null,
+      manual_location: `${address}, ${landmark}`,
+      photo_url: photoUrl,
+      reporter_name: isAnonymous ? 'Anonymous' : name,
+      reporter_email: isAnonymous ? '' : email,
+      reporter_phone: isAnonymous ? '' : phone,
+      is_anonymous: isAnonymous,
+      // ward_id is not included as there's no UI for it yet
+    };
+
+    try {
+      const response = await fetch('http://localhost:3001/issues', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(issueData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to report issue');
+      }
+
+      const newIssue = await response.json();
+      setReferenceNumber(newIssue.id);
+      setSubmitted(true);
+      toast.success(
+        language === 'en'
+          ? 'Issue reported successfully!'
+          : language === 'si'
+          ? 'ගැටළුව සාර්ථකව වාර්තා කරන ලදී!'
+          : 'பிரச்சினை வெற்றிகரமாக புகாரளிக்கப்பட்டது!'
+      );
+    } catch (error) {
+      console.error('Error reporting issue:', error);
+      toast.error(
+        language === 'en'
+          ? 'Failed to report issue. Please try again.'
+          : language === 'si'
+          ? 'ගැටළුව වාර්තා කිරීමට අසමත් විය. කරුණාකර නැවත උත්සාහ කරන්න.'
+          : 'பிரச்சினையைப் புகாரளிக்கத் தவறிவிட்டது. மீண்டும் முயக்கவும்.'
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const canProceedToStep2 = selectedCategory && selectedType && title && description;
@@ -280,7 +332,7 @@ function ReportIssueForm() {
               {language === 'en' ? 'What type of issue would you like to report?' : language === 'si' ? 'ඔබ වාර්තා කිරීමට කැමති ගැටළුව කුමන වර්ගයකින්ද?' : 'நீங்கள் எந்த வகையான பிரச்சினையை புகாரளிக்க விரும்புகிறீர்கள்?'}
             </CardTitle>
             <CardDescription>
-              {language === 'en' ? 'Select a category and provide details about the issue' : language === 'si' ? 'කාණ්ඩයක් තෝරා ගැටළුව පිළිබඳ විස්තර සපයන්න' : 'ஒரு வகையைத் தேர்ந்தெடுத்து பிரச்சினை பற்றிய விவரங்களை வழங்கவும்'}
+              {language === 'en' ? 'Select a category and provide details about the issue' : language === 'si' ? 'කාණ්ඩයක් තෝරා ගැටළු පිළිබඳ විස්තර සපයන්න' : 'ஒரு வகையைத் தேர்ந்தெடுத்து பிரச்சினை பற்றிய விவரங்களை வழங்கவும்'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -461,6 +513,40 @@ function ReportIssueForm() {
               </AlertDescription>
             </Alert>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="latitude">
+                  {language === 'en' ? 'Latitude' : language === 'si' ? 'අක්ෂාංශ' : 'அட்சரேகை'}
+                </Label>
+                <Input
+                  id="latitude"
+                  type="number"
+                  placeholder="e.g., 6.9271"
+                  value={latitude}
+                  onChange={(e) => setLatitude(parseFloat(e.target.value))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="longitude">
+                  {language === 'en' ? 'Longitude' : language === 'si' ? 'දේශාංශ' : 'தீர்க்கரேகை'}
+                </Label>
+                <Input
+                  id="longitude"
+                  type="number"
+                  placeholder="e.g., 79.8612"
+                  value={longitude}
+                  onChange={(e) => setLongitude(parseFloat(e.target.value))}
+                />
+              </div>
+            </div>
+
+            <div className="text-center">
+              <Button variant="outline" onClick={handleGps}>
+                <MapPin className="h-4 w-4 mr-2" />
+                {language === 'en' ? 'Get My Current Location' : language === 'si' ? 'මගේ වත්මන් ස්ථානය ලබා ගන්න' : 'எனது தற்போதைய இருப்பிடத்தைப் பெறுங்கள்'}
+              </Button>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="address">
                 {language === 'en' ? 'Street Address' : language === 'si' ? 'වීදි ලිපිනය' : 'தெரு முகவரி'} *
@@ -526,7 +612,20 @@ function ReportIssueForm() {
               </AlertDescription>
             </Alert>
 
-            <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Input
+                type="checkbox"
+                id="anonymous"
+                checked={isAnonymous}
+                onChange={(e) => setIsAnonymous(e.target.checked)}
+                className="h-4 w-4"
+              />
+              <Label htmlFor="anonymous" className="cursor-pointer">
+                {language === 'en' ? 'I want to report this issue anonymously' : language === 'si' ? 'මට මෙම ගැටළුව නිර්නාමිකව වාර්තා කිරීමට අවශ්‍යයි' : 'இந்த சிக்கலை அநாமதேயமாக புகாரளிக்க விரும்புகிறேன்'}
+              </Label>
+            </div>
+
+            <div className={`space-y-2 ${isAnonymous ? 'opacity-50' : ''}`}>
               <Label htmlFor="name">
                 {language === 'en' ? 'Full Name' : language === 'si' ? 'සම්පූර්ණ නම' : 'முழு பெயர்'} *
               </Label>
@@ -538,11 +637,12 @@ function ReportIssueForm() {
                   placeholder={language === 'en' ? 'John Doe' : language === 'si' ? 'ජෝන් ඩෝ' : 'ஜான் டோ'}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  disabled={isAnonymous}
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className={`space-y-2 ${isAnonymous ? 'opacity-50' : ''}`}>
               <Label htmlFor="phone">
                 {language === 'en' ? 'Mobile Number' : language === 'si' ? 'ජංගම දුරකථන අංකය' : 'மொபைல் எண்'} *
               </Label>
@@ -555,6 +655,7 @@ function ReportIssueForm() {
                   placeholder="+94 77 123 4567"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
+                  disabled={isAnonymous}
                 />
               </div>
               <p className="text-xs text-muted-foreground">
@@ -562,7 +663,7 @@ function ReportIssueForm() {
               </p>
             </div>
 
-            <div className="space-y-2">
+            <div className={`space-y-2 ${isAnonymous ? 'opacity-50' : ''}`}>
               <Label htmlFor="email">
                 {language === 'en' ? 'Email Address' : language === 'si' ? 'විද්‍යුත් තැපැල් ලිපිනය' : 'மின்னஞ்சல் முகவரி'}{' '}
                 <span className="text-muted-foreground">
@@ -578,6 +679,7 @@ function ReportIssueForm() {
                   placeholder="john.doe@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  disabled={isAnonymous}
                 />
               </div>
             </div>
@@ -767,7 +869,7 @@ function TrackIssueForm() {
               {language === 'en' 
                 ? 'The reference number was provided when you submitted your issue. Check your SMS or email for this number.' 
                 : language === 'si' 
-                ? 'ඔබ ඔබගේ ගැටළුව ඉදිරිපත් කළ විට යොමු අංකය සපයන ලදී. මෙම අංකය සඳහා ඔබගේ SMS හෝ විද්‍යුත් තැපෑල පරීක්ෂා කරන්න.' 
+                ? 'ඔබ ඔබගේ ගැටළුව ඉදිරිපත් කළ විට යොමු අංකය සපයන ලදී. මෙම අංකය සඳහා ඔබගේ SMS හෝ විද්‍යුත් තැපැල් පරීක්ෂා කරන්න.' 
                 : 'நீங்கள் உங்கள் பிரச்சினையை சமர்ப்பித்தபோது குறிப்பு எண் வழங்கப்பட்டது. இந்த எண்ணுக்காக உங்கள் SMS அல்லது மின்னஞ்சலை சரிபார்க்கவும்.'}
             </AlertDescription>
           </Alert>
