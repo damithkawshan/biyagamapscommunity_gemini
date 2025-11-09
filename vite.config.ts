@@ -2,6 +2,9 @@
   import { defineConfig } from 'vite';
   import react from '@vitejs/plugin-react-swc';
   import path from 'path';
+  import { fileURLToPath } from 'url';
+
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
   export default defineConfig({
     plugins: [react()],
@@ -17,9 +20,9 @@
         'next-themes@0.4.6': 'next-themes',
         'lucide-react@0.487.0': 'lucide-react',
         'input-otp@1.4.2': 'input-otp',
-        'figma:asset/f5fdd1b35bad522e2d178bdf6e79e09f3ca96a82.png': path.resolve(__dirname, './src/assets/f5fdd1b35bad522e2d178bdf6e79e09f3ca96a82.png'),
-        'figma:asset/edd9aeadcbb02e03e5d9aa2e7375ce85c2d36db3.png': path.resolve(__dirname, './src/assets/edd9aeadcbb02e03e5d9aa2e7375ce85c2d36db3.png'),
-        'figma:asset/6381f5184a28547d936c8a93e36c26c52453a204.png': path.resolve(__dirname, './src/assets/6381f5184a28547d936c8a93e36c26c52453a204.png'),
+        'figma:asset/f5fdd1b35bad522e2d178bdf6e79e09f3ca96a82.png': path.resolve(__dirname, './src/assets/aerial_view.png'),
+        'figma:asset/edd9aeadcbb02e03e5d9aa2e7375ce85c2d36db3.png': path.resolve(__dirname, './src/assets/sabha_logo_no_background.png'),
+        'figma:asset/6381f5184a28547d936c8a93e36c26c52453a204.png': path.resolve(__dirname, './src/assets/Emblem_of_Sri_Lanka.svg.png'),
         'figma:asset/396ca1a2e22b1a27ac94973f1f32fa86773a7ac2.png': path.resolve(__dirname, './src/assets/396ca1a2e22b1a27ac94973f1f32fa86773a7ac2.png'),
         'embla-carousel-react@8.6.0': 'embla-carousel-react',
         'cmdk@1.1.1': 'cmdk',
