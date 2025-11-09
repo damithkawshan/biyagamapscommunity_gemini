@@ -24,7 +24,7 @@ import govLogo from "figma:asset/6381f5184a28547d936c8a93e36c26c52453a204.png";
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
-  const { language, setLanguage} = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const t = translations[language];
 
   const isActive = (path: string) => {

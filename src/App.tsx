@@ -18,6 +18,9 @@ import { ContactPage } from "./pages/ContactPage";
 import { Newsletter } from "./pages/Newsletter";
 import { IssueReportingPage } from "./pages/IssueReportingPage";
 import { IssueDashboardPage } from "./pages/IssueDashboardPage";
+import { DownloadsPage } from "./pages/DownloadsPage";
+import { ProjectsPage } from "./pages/ProjectsPage";
+import { AboutAreaPage } from "./pages/AboutAreaPage";
 
 export default function App() {
   return (
@@ -33,6 +36,9 @@ export default function App() {
               <Route path="/services/department/:departmentId" element={<ServicesPage />} />
               <Route path="/report-issue" element={<IssueReportingPage />} />
               <Route path="/issue-dashboard" element={<IssueDashboardPage />} />
+              <Route path="/about-area" element={<AboutAreaPage />} />
+              <Route path="/downloads" element={<DownloadsPage />} />
+              <Route path="/projects" element={<ProjectsPage />} />
               <Route path="/statistics" element={<StatisticsPage />} />
               <Route path="/gallery" element={<GalleryPage />} />
               <Route path="/council" element={<CouncilStructurePage />} />
