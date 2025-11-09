@@ -44,10 +44,14 @@ export function IssueDashboardPage() {
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+// ... existing code ...
+
   useEffect(() => {
     const fetchIssues = async () => {
       try {
-        const response = await fetch('http://localhost:3001/issues');
+        const response = await fetch(`${API_BASE_URL}/issues`);
         if (!response.ok) {
           throw new Error('Failed to fetch issues');
         }

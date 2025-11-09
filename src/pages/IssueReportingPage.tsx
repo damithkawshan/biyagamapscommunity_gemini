@@ -15,6 +15,8 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { issueCategories, issueTypes } from '../data/issues';
 import { toast } from 'sonner';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export function IssueReportingPage() {
   const { language } = useLanguage();
   const [activeTab, setActiveTab] = useState<'report' | 'track'>('report');
@@ -151,7 +153,7 @@ function ReportIssueForm() {
     };
 
     try {
-      const response = await fetch('http://localhost:3001/issues', {
+      const response = await fetch(`${API_BASE_URL}/issues`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
